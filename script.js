@@ -119,6 +119,7 @@ const State = {
   paused:    false,
   tid:       {},         // timer IDs: arrival, raf
   nextId:    0,
+  bon:       0,          // bon counter (orders completed)
 };
 
 /* ============================================================
@@ -256,6 +257,51 @@ const Audio = (() => {
     serve() {
       noise(0.14, 0.1, 300, 5000);
       tone(440, 'sine', 0.1, 0.06);
+    },
+
+    /* ── Background music loop — upbeat jazz cafe vibes ── */
+    bgmLoop() {
+      if (muted) return;
+      try {
+        const c = ctx_();
+        const now = c.currentTime;
+
+        // Jazzy upbeat chord progression on bass synth
+        // Cmaj7 - Fmaj7 - Dm7 - G7 pattern, 2 bar loop = 4 sec at 120 bpm
+        const pattern = [
+          { f: 130.81, dur: 0.5 },  // C3
+          { f: 164.81, dur: 0.5 },  // E3
+          { f: 196.00, dur: 0.5 },  // G3
+          { f: 246.94, dur: 0.5 },  // B3
+          { f: 174.61, dur: 0.5 },  // F3
+          { f: 220.00, dur: 0.5 },  // A3
+          { f: 246.94, dur: 0.5 },  // B3
+          { f: 293.66, dur: 0.5 },  // D4
+          { f: 146.83, dur: 0.5 },  // D3
+          { f: 164.81, dur: 0.5 },  // E3
+          { f: 196.00, dur: 0.5 },  // G3
+          { f: 220.00, dur: 0.5 },  // A3
+          { f: 196.00, dur: 0.5 },  // G3
+          { f: 246.94, dur: 0.5 },  // B3
+          { f: 293.66, dur: 0.5 },  // D4
+          { f: 329.63, dur: 0.5 },  // E4
+        ];
+
+        pattern.forEach((note, i) => {
+          setTimeout(() => {
+            if (muted) return;
+            const o = c.createOscillator();
+            const g = c.createGain();
+            o.connect(g); g.connect(c.destination);
+            o.type = 'sine';
+            o.frequency.value = note.f;
+            g.gain.setValueAtTime(0.001, c.currentTime);
+            g.gain.linearRampToValueAtTime(0.06, c.currentTime + 0.02);
+            g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + note.dur);
+            o.start(); o.stop(c.currentTime + note.dur + 0.01);
+          }, (i * note.dur * 1000) % 4000);
+        });
+      } catch (_) {}
     },
 
     /* ── Toggle mute state ── */
@@ -784,6 +830,8 @@ function serve() {
     gainScore(total);
     gainXP(CONFIG.xpPerOrder + Math.round(speedPct * CONFIG.xpSpeedBonus));
 
+    State.bon++;
+    updateBon();
     State.combo = Math.min(State.combo + 1, 8);
     updateCombo();
     Audio.success();
@@ -860,6 +908,13 @@ function updateXP() {
   const needed = CONFIG.xpToLevel(State.level);
   $id('xp-fill').style.width = (clamp(State.xp / needed, 0, 1) * 100) + '%';
   $id('hud-lv').textContent = State.level;
+}
+
+function updateBon() {
+  const bonEl = $id('bon-counter');
+  if (bonEl) {
+    bonEl.querySelector('.bon-count').textContent = State.bon;
+  }
 }
 
 /* ============================================================
@@ -997,7 +1052,7 @@ function startGame() {
   Object.assign(State, {
     score: 0, lives: CONFIG.maxLives, combo: 1,
     level: 1, xp: 0, diffStep: 0,
-    customers: [], paused: false, nextId: 0,
+    customers: [], paused: false, nextId: 0, bon: 0,
   });
 
   // Clear DOM
@@ -1008,6 +1063,7 @@ function startGame() {
   renderHearts();
   updateCombo();
   updateXP();
+  updateBon();
   $id('machine-dot').className = 'machine-status-dot on';
 
   // Reset drink
@@ -1017,6 +1073,10 @@ function startGame() {
 
   // Machine startup sound
   setTimeout(() => Audio.machine(), 120);
+
+  // Start background music loop (4 sec pattern)
+  State.tid.bgm = setInterval(() => Audio.bgmLoop(), 4000);
+  Audio.bgmLoop();
 
   // Cancel old timers
   clearTimeout(State.tid.arrival);
@@ -1043,6 +1103,7 @@ function resumeGame() {
 
 function endGame() {
   clearTimeout(State.tid.arrival);
+  clearInterval(State.tid.bgm);
   cancelAnimationFrame(State.tid.raf);
   if (State.score > State.bestScore) {
     State.bestScore = State.score;
