@@ -123,49 +123,148 @@ const State = {
 
 /* ============================================================
    AUDIO — Web Audio API (no external files)
+   Rich synthesised sound effects for a warm barista game feel.
    ============================================================ */
 const Audio = (() => {
   let ctx = null;
+  let muted = false;
+
   function ctx_() {
     if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    // Resume in case browser suspended it (autoplay policy)
+    if (ctx.state === 'suspended') ctx.resume();
     return ctx;
   }
-  function tone(freq, type, dur, vol = 0.15) {
+
+  /* ── Oscillator tone with optional frequency sweep ── */
+  function tone(freq, type, dur, vol = 0.15, freqEnd = null) {
+    if (muted) return;
     try {
       const c = ctx_();
       const o = c.createOscillator();
       const g = c.createGain();
       o.connect(g); g.connect(c.destination);
-      o.type = type; o.frequency.value = freq;
-      g.gain.setValueAtTime(vol, c.currentTime);
+      o.type = type;
+      o.frequency.setValueAtTime(freq, c.currentTime);
+      if (freqEnd) o.frequency.exponentialRampToValueAtTime(freqEnd, c.currentTime + dur);
+      g.gain.setValueAtTime(0.001, c.currentTime);
+      g.gain.linearRampToValueAtTime(vol, c.currentTime + 0.01);
       g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + dur);
-      o.start(); o.stop(c.currentTime + dur);
+      o.start(); o.stop(c.currentTime + dur + 0.02);
     } catch (_) {}
   }
-  function noise(dur = 0.18, vol = 0.09) {
+
+  /* ── Filtered noise burst (steam / liquid / texture) ── */
+  function noise(dur = 0.18, vol = 0.09, hiPass = 0, loPass = 22000) {
+    if (muted) return;
     try {
-      const c = ctx_();
-      const sz  = c.sampleRate * dur;
+      const c   = ctx_();
+      const sz  = Math.ceil(c.sampleRate * dur);
       const buf = c.createBuffer(1, sz, c.sampleRate);
       const d   = buf.getChannelData(0);
       for (let i = 0; i < sz; i++) d[i] = Math.random() * 2 - 1;
       const src = c.createBufferSource();
       const g   = c.createGain();
-      src.buffer = buf; src.connect(g); g.connect(c.destination);
-      g.gain.setValueAtTime(vol, c.currentTime);
+      src.buffer = buf;
+      if (hiPass > 0) {
+        const hp = c.createBiquadFilter();
+        hp.type = 'highpass'; hp.frequency.value = hiPass;
+        src.connect(hp); hp.connect(g);
+      } else {
+        src.connect(g);
+      }
+      if (loPass < 22000) {
+        const lp = c.createBiquadFilter();
+        lp.type = 'lowpass'; lp.frequency.value = loPass;
+        g.connect(lp); lp.connect(c.destination);
+      } else {
+        g.connect(c.destination);
+      }
+      g.gain.setValueAtTime(0.001, c.currentTime);
+      g.gain.linearRampToValueAtTime(vol, c.currentTime + 0.015);
       g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + dur);
       src.start();
     } catch (_) {}
   }
+
   return {
-    click:   () => tone(900, 'sine', 0.06, 0.1),
-    pour:    () => noise(0.22, 0.08),
-    success: () => { tone(600,'sine',0.1,0.15); setTimeout(()=>tone(900,'sine',0.15,0.15),95); },
-    fail:    () => { tone(240,'sawtooth',0.15,0.15); setTimeout(()=>tone(170,'sawtooth',0.18,0.12),90); },
-    miss:    () => tone(280, 'triangle', 0.28, 0.13),
-    combo:   () => { tone(800,'sine',0.09,0.1); setTimeout(()=>tone(1100,'sine',0.12,0.12),80); },
-    levelup: () => { [600,800,1000,1300].forEach((f,i)=>setTimeout(()=>tone(f,'sine',0.18,0.15),i*80)); },
-    serve:   () => noise(0.12, 0.12),
+    /* ── UI tap ── */
+    click() {
+      tone(880, 'sine', 0.055, 0.08);
+    },
+
+    /* ── Ingredient selected — soft brew bubble ── */
+    brew() {
+      noise(0.09, 0.04, 200, 3000);
+      tone(110, 'sine', 0.09, 0.035);
+    },
+
+    /* ── Coffee pouring into cup ── */
+    pour() {
+      noise(0.38, 0.1, 400, 8000);
+      tone(180, 'sine', 0.32, 0.05);
+      setTimeout(() => tone(240, 'sine', 0.22, 0.04), 80);
+    },
+
+    /* ── Correct order — warm major chord cascade ── */
+    success() {
+      // C5–E5–G5 stagger + octave sparkle
+      [523, 659, 784].forEach((f, i) => setTimeout(() => tone(f, 'sine', 0.32, 0.14), i * 55));
+      setTimeout(() => tone(1047, 'sine', 0.4, 0.08), 185);
+      setTimeout(() => noise(0.12, 0.04, 1000, 8000), 60);
+    },
+
+    /* ── Wrong order — short descending buzz ── */
+    fail() {
+      tone(340, 'sawtooth', 0.08, 0.1, 200);
+      setTimeout(() => tone(200, 'sawtooth', 0.14, 0.08), 85);
+    },
+
+    /* ── Customer left — sad low tone ── */
+    miss() {
+      tone(260, 'triangle', 0.32, 0.11, 200);
+    },
+
+    /* ── Combo hit — escalating ping scaled by current combo ── */
+    combo() {
+      const base = 580 + clamp(State.combo, 1, 8) * 45;
+      tone(base, 'sine', 0.1, 0.1);
+      setTimeout(() => tone(base * 1.5, 'sine', 0.14, 0.1), 72);
+      setTimeout(() => noise(0.06, 0.03, 800, 6000), 30);
+    },
+
+    /* ── Machine start — pressure hum ── */
+    machine() {
+      // Low rumble builds then fades
+      tone(55, 'sawtooth', 0.9, 0.055, 80);
+      noise(0.9, 0.025, 0, 600);
+      setTimeout(() => noise(0.4, 0.06, 800, 4000), 300);
+    },
+
+    /* ── Level up — pentatonic fanfare ── */
+    levelup() {
+      [523, 659, 784, 1047].forEach((f, i) => {
+        setTimeout(() => {
+          tone(f, 'sine', 0.32, 0.14);
+          tone(f * 2, 'sine', 0.24, 0.06);
+        }, i * 88);
+      });
+      setTimeout(() => noise(0.18, 0.04, 600, 8000), 350);
+    },
+
+    /* ── Serve button tap ── */
+    serve() {
+      noise(0.14, 0.1, 300, 5000);
+      tone(440, 'sine', 0.1, 0.06);
+    },
+
+    /* ── Toggle mute state ── */
+    toggleMute() {
+      muted = !muted;
+      return muted;
+    },
+
+    get isMuted() { return muted; },
   };
 })();
 
@@ -916,6 +1015,9 @@ function startGame() {
 
   showScreen('game');
 
+  // Machine startup sound
+  setTimeout(() => Audio.machine(), 120);
+
   // Cancel old timers
   clearTimeout(State.tid.arrival);
   cancelAnimationFrame(State.tid.raf);
@@ -980,10 +1082,20 @@ function init() {
   $id('serve-btn').addEventListener('click', () => { Audio.click(); serve(); });
   $id('clear-btn').addEventListener('click', () => { Audio.click(); DrinkBuilder.reset(); });
 
-  // Ingredient buttons
+  // Mute toggle
+  $id('mute-btn').addEventListener('click', () => {
+    const nowMuted = Audio.toggleMute();
+    Voice.toggleMute();
+    const btn = $id('mute-btn');
+    btn.textContent = nowMuted ? '🔇' : '🔊';
+    btn.classList.toggle('muted', nowMuted);
+  });
+
+  // Ingredient buttons — play brew sound on each tap
   document.querySelectorAll('.ing-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       if (State.screen !== 'game' || State.paused) return;
+      Audio.brew();
       DrinkBuilder.set(btn.dataset.type, btn.dataset.value);
     });
   });
@@ -995,6 +1107,7 @@ function init() {
       else if (State.paused) resumeGame();
     }
     if (e.key === 'Enter' && State.screen === 'game' && !State.paused) serve();
+    if (e.key.toLowerCase() === 'm') $id('mute-btn').click();
   });
 
   // Initial empty cup
