@@ -2,182 +2,215 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>Coffee Master</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- ===== START SCREEN ===== -->
-  <div id="start-screen" class="screen active">
-    <div class="steam-bg">
-      <div class="steam s1"></div>
-      <div class="steam s2"></div>
-      <div class="steam s3"></div>
+<!-- ═══════════════════════════════════════════════
+     START SCREEN
+════════════════════════════════════════════════ -->
+<div id="start-screen" class="screen active">
+  <div class="start-bg">
+    <div class="bg-steam bs1"></div>
+    <div class="bg-steam bs2"></div>
+    <div class="bg-steam bs3"></div>
+    <div class="bg-steam bs4"></div>
+  </div>
+  <div class="start-inner">
+    <div class="start-logo">
+      <div class="start-cup-icon">☕</div>
+      <h1>Coffee<br>Master</h1>
+      <p class="start-sub">The art of the perfect pour</p>
     </div>
-    <div class="start-content">
-      <div class="logo">
-        <div class="logo-cup">☕</div>
-        <h1>Coffee Master</h1>
-        <p class="tagline">The art of the perfect pour</p>
-      </div>
-      <button id="play-btn" class="btn-primary">Start Shift</button>
-      <div class="high-score-display">Best Score: <span id="start-best-score">0</span></div>
+    <div class="start-card">
+      <div class="start-best">🏆 Best Score: <strong id="start-best">0</strong></div>
+      <button id="play-btn" class="btn-cta">Start Shift</button>
+      <p class="start-hint">Build orders · Serve fast · Keep the streak</p>
     </div>
   </div>
+</div>
 
-  <!-- ===== GAME SCREEN ===== -->
-  <div id="game-screen" class="screen">
+<!-- ═══════════════════════════════════════════════
+     GAME SCREEN  (no-scroll, flex column, 100dvh)
+════════════════════════════════════════════════ -->
+<div id="game-screen" class="screen">
 
-    <!-- HUD -->
-    <header class="hud">
-      <div class="hud-left">
-        <div class="hud-item">
-          <span class="hud-label">Score</span>
-          <span class="hud-value" id="score-display">0</span>
-        </div>
-        <div class="hud-item combo-display" id="combo-display">
-          <span class="hud-label">Combo</span>
-          <span class="hud-value" id="combo-value">x1</span>
-        </div>
-      </div>
-      <div class="hud-center">
-        <div class="rush-indicator" id="rush-indicator">
-          <span class="rush-label">Rush Level</span>
-          <div class="rush-bar-wrap"><div class="rush-bar" id="rush-bar"></div></div>
-        </div>
-      </div>
-      <div class="hud-right">
-        <div class="lives" id="lives-display">
-          <span class="hud-label">Reputation</span>
-          <div class="hearts" id="hearts"></div>
-        </div>
-        <button id="pause-btn" class="btn-icon" title="Pause">⏸</button>
-      </div>
-    </header>
-
-    <main class="game-layout">
-
-      <!-- CUSTOMER QUEUE -->
-      <section class="customer-queue" id="customer-queue">
-        <h2 class="section-label">Orders</h2>
-        <div class="queue-list" id="queue-list"></div>
-      </section>
-
-      <!-- COFFEE MACHINE -->
-      <section class="machine-area">
-        <div class="machine-panel">
-
-          <!-- Cup preview -->
-          <div class="cup-station">
-            <div class="cup-label">Current Cup</div>
-            <div class="cup-visual" id="cup-visual">
-              <div class="cup-layers" id="cup-layers"></div>
-              <div class="cup-base"></div>
-            </div>
-            <div class="cup-contents" id="cup-contents">
-              <span class="empty-hint">Select size to begin</span>
-            </div>
-          </div>
-
-          <!-- Controls -->
-          <div class="controls-grid">
-
-            <!-- Row 1: Size -->
-            <div class="control-group">
-              <div class="group-label">Size</div>
-              <div class="btn-row">
-                <button class="ingredient-btn size-btn" data-type="size" data-value="small">S</button>
-                <button class="ingredient-btn size-btn" data-type="size" data-value="medium">M</button>
-                <button class="ingredient-btn size-btn" data-type="size" data-value="large">L</button>
-              </div>
-            </div>
-
-            <!-- Row 2: Coffee base -->
-            <div class="control-group">
-              <div class="group-label">Coffee</div>
-              <div class="btn-row">
-                <button class="ingredient-btn" data-type="base" data-value="espresso">Espresso</button>
-                <button class="ingredient-btn" data-type="base" data-value="americano">Americano</button>
-                <button class="ingredient-btn" data-type="base" data-value="latte">Latte</button>
-                <button class="ingredient-btn" data-type="base" data-value="cappuccino">Cappuccino</button>
-                <button class="ingredient-btn" data-type="base" data-value="mocha">Mocha</button>
-              </div>
-            </div>
-
-            <!-- Row 3: Milk -->
-            <div class="control-group">
-              <div class="group-label">Milk</div>
-              <div class="btn-row">
-                <button class="ingredient-btn" data-type="milk" data-value="none">None</button>
-                <button class="ingredient-btn" data-type="milk" data-value="whole">Whole</button>
-                <button class="ingredient-btn" data-type="milk" data-value="oat">Oat</button>
-                <button class="ingredient-btn" data-type="milk" data-value="skim">Skim</button>
-              </div>
-            </div>
-
-            <!-- Row 4: Syrup -->
-            <div class="control-group">
-              <div class="group-label">Syrup</div>
-              <div class="btn-row">
-                <button class="ingredient-btn" data-type="syrup" data-value="none">None</button>
-                <button class="ingredient-btn" data-type="syrup" data-value="vanilla">Vanilla</button>
-                <button class="ingredient-btn" data-type="syrup" data-value="caramel">Caramel</button>
-                <button class="ingredient-btn" data-type="syrup" data-value="hazelnut">Hazelnut</button>
-              </div>
-            </div>
-
-            <!-- Row 5: Extras -->
-            <div class="control-group">
-              <div class="group-label">Extras</div>
-              <div class="btn-row">
-                <button class="ingredient-btn toggle-btn" data-type="sugar" data-value="sugar">Sugar</button>
-                <button class="ingredient-btn toggle-btn" data-type="foam" data-value="foam">Foam</button>
-                <button class="ingredient-btn toggle-btn" data-type="topping" data-value="cocoa">Cocoa</button>
-                <button class="ingredient-btn toggle-btn" data-type="topping" data-value="cinnamon">Cinnamon</button>
-              </div>
-            </div>
-
-          </div>
-
-          <!-- Action buttons -->
-          <div class="action-row">
-            <button class="btn-secondary" id="clear-btn">Clear</button>
-            <button class="btn-serve" id="serve-btn">Serve ☕</button>
-          </div>
-
-        </div>
-
-        <!-- Feedback flash -->
-        <div class="feedback" id="feedback"></div>
-      </section>
-
-    </main>
+  <!-- ── HUD ── -->
+  <div class="hud">
+    <div class="hud-level">
+      <span class="lv-pill">Lv <strong id="hud-lv">1</strong></span>
+      <div class="xp-track"><div class="xp-fill" id="xp-fill"></div></div>
+    </div>
+    <div class="hud-score">
+      <div class="hud-lbl">Score</div>
+      <div class="hud-num" id="score-num">0</div>
+    </div>
+    <div class="hud-combo" id="combo-wrap">
+      <div class="combo-num" id="combo-num">×1</div>
+      <div class="hud-lbl">combo</div>
+    </div>
+    <div class="hud-hearts" id="hud-hearts"></div>
+    <button id="pause-btn" class="btn-hud-icon" title="Pause (P)">⏸</button>
   </div>
 
-  <!-- ===== PAUSE SCREEN ===== -->
-  <div id="pause-screen" class="screen overlay">
-    <div class="modal">
-      <h2>Paused</h2>
-      <button id="resume-btn" class="btn-primary">Resume</button>
-      <button id="quit-btn" class="btn-secondary">Quit to Menu</button>
+  <!-- ── CUSTOMER QUEUE STRIP (horizontal) ── -->
+  <div class="queue-strip">
+    <div class="queue-scroll" id="queue-scroll">
+      <div class="queue-placeholder" id="queue-placeholder">☕ Waiting for the first customer…</div>
     </div>
   </div>
 
-  <!-- ===== GAME OVER SCREEN ===== -->
-  <div id="gameover-screen" class="screen overlay">
-    <div class="modal">
-      <div class="gameover-icon">☕</div>
-      <h2>Shift Over</h2>
-      <div class="final-stats">
-        <div class="stat-row"><span>Final Score</span><strong id="final-score">0</strong></div>
-        <div class="stat-row"><span>Best Score</span><strong id="final-best">0</strong></div>
+  <!-- ── MACHINE STAGE ── -->
+  <div class="stage">
+
+    <!-- Machine header / body (decorative chrome) -->
+    <div class="machine-top">
+      <div class="machine-brand">COFFEE MASTER PRO</div>
+      <div class="machine-gauge">
+        <svg viewBox="0 0 48 48" class="gauge-svg">
+          <circle cx="24" cy="24" r="19" fill="none" stroke="#2a2a2a" stroke-width="4"/>
+          <circle cx="24" cy="24" r="19" fill="none" stroke="#c07830" stroke-width="4"
+                  stroke-dasharray="96 24" stroke-dashoffset="12" stroke-linecap="round"/>
+          <line id="gauge-needle" x1="24" y1="24" x2="24" y2="9"
+                stroke="#f0c96a" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="24" cy="24" r="3" fill="#f0c96a"/>
+        </svg>
+        <div class="gauge-lbl">BAR</div>
       </div>
-      <button id="restart-btn" class="btn-primary">New Shift</button>
-      <button id="menu-btn" class="btn-secondary">Main Menu</button>
+      <div class="machine-status-dot" id="machine-dot"></div>
+    </div>
+
+    <!-- Cup area -->
+    <div class="cup-area">
+      <div class="group-head">
+        <div class="group-head-holes">
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+      <div class="cup-wrap" id="cup-wrap">
+        <!-- SVG cup injected by JS -->
+      </div>
+      <div class="drip-tray"></div>
+    </div>
+
+    <!-- Live build summary -->
+    <div class="build-tags" id="build-tags">
+      <span class="build-hint">← select ingredients below</span>
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <!-- ── INGREDIENT PANEL ── -->
+  <div class="ing-panel">
+
+    <div class="ing-row">
+      <div class="ing-cat">Size</div>
+      <div class="ing-btns">
+        <button class="ing-btn size-btn" data-type="size" data-value="small">S</button>
+        <button class="ing-btn size-btn" data-type="size" data-value="medium">M</button>
+        <button class="ing-btn size-btn" data-type="size" data-value="large">L</button>
+      </div>
+    </div>
+
+    <div class="ing-row">
+      <div class="ing-cat">Coffee</div>
+      <div class="ing-btns">
+        <button class="ing-btn" data-type="base" data-value="espresso">Espresso</button>
+        <button class="ing-btn" data-type="base" data-value="americano">Americano</button>
+        <button class="ing-btn" data-type="base" data-value="latte">Latte</button>
+        <button class="ing-btn" data-type="base" data-value="cappuccino">Cappuccino</button>
+        <button class="ing-btn" data-type="base" data-value="mocha">Mocha</button>
+      </div>
+    </div>
+
+    <div class="ing-row">
+      <div class="ing-cat">Milk</div>
+      <div class="ing-btns">
+        <button class="ing-btn" data-type="milk" data-value="none">None</button>
+        <button class="ing-btn" data-type="milk" data-value="whole">Whole</button>
+        <button class="ing-btn" data-type="milk" data-value="oat">Oat</button>
+        <button class="ing-btn" data-type="milk" data-value="skim">Skim</button>
+      </div>
+    </div>
+
+    <div class="ing-row">
+      <div class="ing-cat">Syrup</div>
+      <div class="ing-btns">
+        <button class="ing-btn" data-type="syrup" data-value="none">None</button>
+        <button class="ing-btn" data-type="syrup" data-value="vanilla">Vanilla</button>
+        <button class="ing-btn" data-type="syrup" data-value="caramel">Caramel</button>
+        <button class="ing-btn" data-type="syrup" data-value="hazelnut">Hazelnut</button>
+      </div>
+    </div>
+
+    <div class="ing-row">
+      <div class="ing-cat">Extra</div>
+      <div class="ing-btns">
+        <button class="ing-btn toggle-btn" data-type="extra" data-value="sugar">Sugar</button>
+        <button class="ing-btn toggle-btn" data-type="extra" data-value="foam">Foam</button>
+        <button class="ing-btn toggle-btn" data-type="extra" data-value="cocoa">Cocoa</button>
+        <button class="ing-btn toggle-btn" data-type="extra" data-value="cinnamon">Cinnamon</button>
+      </div>
+    </div>
+
+  </div><!-- /ing-panel -->
+
+  <!-- ── ACTION BAR (always visible at bottom) ── -->
+  <div class="action-bar">
+    <button id="clear-btn" class="btn-clear">✕ Clear</button>
+    <button id="serve-btn" class="btn-serve">Serve ☕</button>
+  </div>
+
+</div><!-- /#game-screen -->
+
+<!-- ═══════════════════════════════════════════════
+     LEVEL-UP OVERLAY
+════════════════════════════════════════════════ -->
+<div id="levelup-screen" class="screen overlay" aria-hidden="true">
+  <div class="levelup-box">
+    <div class="levelup-star">⭐</div>
+    <div class="levelup-title">LEVEL UP!</div>
+    <div class="levelup-num" id="lu-num">Level 2</div>
+    <div class="levelup-desc" id="lu-desc">You're getting dangerous…</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     PAUSE SCREEN
+════════════════════════════════════════════════ -->
+<div id="pause-screen" class="screen overlay" aria-hidden="true">
+  <div class="modal">
+    <div class="modal-icon">⏸</div>
+    <h2>Paused</h2>
+    <button id="resume-btn" class="btn-cta">Resume</button>
+    <button id="quit-btn" class="btn-ghost">Quit to Menu</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     GAME OVER SCREEN
+════════════════════════════════════════════════ -->
+<div id="gameover-screen" class="screen overlay" aria-hidden="true">
+  <div class="modal">
+    <div class="modal-icon go-cup">☕</div>
+    <h2>Shift Over!</h2>
+    <div class="go-stats">
+      <div class="go-row"><span>Score</span>     <strong id="go-score">0</strong></div>
+      <div class="go-row"><span>Level reached</span><strong id="go-level">1</strong></div>
+      <div class="go-row best-row"><span>🏆 Best</span><strong id="go-best">0</strong></div>
+    </div>
+    <button id="restart-btn" class="btn-cta">New Shift</button>
+    <button id="menu-btn"    class="btn-ghost">Main Menu</button>
+  </div>
+</div>
+
+<!-- ── Floating feedback toast ── -->
+<div id="toast" class="toast" aria-live="polite"></div>
+
+<script src="script.js"></script>
 </body>
 </html>
