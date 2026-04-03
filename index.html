@@ -83,6 +83,10 @@
         </svg>
         <div class="gauge-lbl">BAR</div>
       </div>
+      <div class="machine-bon" id="bon-counter">
+        <div class="bon-count">0</div>
+        <div class="bon-lbl">BON</div>
+      </div>
       <div class="machine-status-dot" id="machine-dot"></div>
     </div>
 
@@ -211,6 +215,14 @@
 
 <!-- ── Floating feedback toast ── -->
 <div id="toast" class="toast" aria-live="polite"></div>
+
+<!-- ── Audio elements ── -->
+<audio id="bgm-audio" class="bgm-audio" loop></audio>
+<audio id="serve-sound"></audio>
+<audio id="correct-sound"></audio>
+<audio id="wrong-sound"></audio>
+<audio id="levelup-sound"></audio>
+<audio id="combo-sound"></audio>
 
 <script src="script.js"></script>
 </body>

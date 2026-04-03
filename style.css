@@ -244,6 +244,7 @@ button:focus-visible { outline: 2px solid var(--caramel); outline-offset: 2px; }
   height: 100vh; /* fallback */
   overflow: hidden;
   background: var(--bg1);
+  position: relative;
 }
 
 .hud {
@@ -578,6 +579,24 @@ button:focus-visible { outline: 2px solid var(--caramel); outline-offset: 2px; }
 }
 .gauge-lbl { font-size: 0.46rem; letter-spacing: 0.15em; color: var(--text-muted); }
 
+.machine-bon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+.bon-count {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--caramel);
+  font-variant-numeric: tabular-nums;
+}
+.bon-lbl {
+  font-size: 0.46rem;
+  letter-spacing: 0.15em;
+  color: var(--text-muted);
+}
+
 .machine-status-dot {
   width: 10px; height: 10px;
   border-radius: 50%;
@@ -712,7 +731,7 @@ button:focus-visible { outline: 2px solid var(--caramel); outline-offset: 2px; }
    INGREDIENT PANEL
    ============================================================ */
 .ing-panel {
-  flex: 0 0 var(--ing-h);
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -720,6 +739,8 @@ button:focus-visible { outline: 2px solid var(--caramel); outline-offset: 2px; }
   padding: 8px 12px;
   background: var(--bg0);
   border-top: 2px solid var(--card-border);
+  max-height: var(--ing-h);
+  overflow-y: auto;
 }
 .ing-row {
   display: flex;
