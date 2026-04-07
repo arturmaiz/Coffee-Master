@@ -88,6 +88,33 @@ const CONFIG = {
       "They left...",
       "Lost a customer!",
     ],
+    buttonCurse: [
+      "What the fuck are you doing?!",
+      "Holy shit, press it already!",
+      "Jesus fucking Christ!",
+      "Are you kidding me right now?!",
+      "What in the goddamn hell?!",
+      "Son of a bitch!",
+      "For fuck's sake!",
+      "Fucking hell!",
+      "Oh shit shit shit!",
+      "Motherfucker!",
+      "Goddamn it!",
+      "What the actual fuck?!",
+      "Holy fucking shit!",
+      "Christ on a cracker!",
+      "You absolute bastard!",
+      "Shitting hell!",
+      "Bloody fucking hell!",
+      "You little shit!",
+      "Get your act together, asshole!",
+      "What the fuck was that?!",
+      "Stop fucking around!",
+      "Oh for fuck's sake!",
+      "Bullshit!",
+      "Absolute clusterfuck!",
+      "Fuck this shit!",
+    ],
   },
 };
 
@@ -320,22 +347,60 @@ const Audio = (() => {
    ============================================================ */
 const Voice = (() => {
   let muted = false;
-  function say(text) {
+  let bestVoice = null;
+
+  /* Pick the highest-quality English voice available.
+     Priority: Google neural > Microsoft natural > any en-US > first available */
+  function pickBestVoice() {
+    if (!window.speechSynthesis) return null;
+    const voices = window.speechSynthesis.getVoices();
+    if (!voices.length) return null;
+    const prio = [
+      v => /Google US English/.test(v.name),
+      v => /Google/.test(v.name) && /en/.test(v.lang),
+      v => /Microsoft.*Natural/.test(v.name) && /en/.test(v.lang),
+      v => /Microsoft/.test(v.name) && /en-US/.test(v.lang),
+      v => v.lang === 'en-US',
+      v => /en/.test(v.lang),
+    ];
+    for (const test of prio) {
+      const match = voices.find(test);
+      if (match) return match;
+    }
+    return voices[0];
+  }
+
+  /* Load voices — they're async in most browsers */
+  if (window.speechSynthesis) {
+    window.speechSynthesis.onvoiceschanged = () => { bestVoice = pickBestVoice(); };
+    bestVoice = pickBestVoice(); // try immediately too
+  }
+
+  function say(text, { rate = 1.1, pitch = 1.05, vol = 1.0 } = {}) {
     if (muted || !window.speechSynthesis) return;
     try {
       window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
-      u.rate = 1.15; u.pitch = 1.1; u.volume = 0.88;
+      if (!bestVoice) bestVoice = pickBestVoice();
+      if (bestVoice) u.voice = bestVoice;
+      u.lang   = 'en-US';
+      u.rate   = rate;
+      u.pitch  = pitch;
+      u.volume = vol;
       window.speechSynthesis.speak(u);
     } catch (_) {}
   }
+
   function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
   return {
-    success()      { say(pick(CONFIG.voice.success)); },
-    fail()         { say(pick(CONFIG.voice.fail)); },
+    success()      { say(pick(CONFIG.voice.success), { rate: 1.2, pitch: 1.1 }); },
+    fail()         { say(pick(CONFIG.voice.fail),    { rate: 1.1, pitch: 0.95 }); },
     combo(n)       { if (n >= 5) say(pick(CONFIG.voice.combo5)); else if (n >= 3) say(pick(CONFIG.voice.combo3)); },
-    levelUp()      { say(pick(CONFIG.voice.levelUp)); },
-    miss()         { say(pick(CONFIG.voice.miss)); },
+    levelUp()      { say(pick(CONFIG.voice.levelUp), { rate: 1.15, pitch: 1.15 }); },
+    miss()         { say(pick(CONFIG.voice.miss),    { rate: 1.0,  pitch: 0.9  }); },
+    /* Fired on every button press — loud, punchy curse */
+    buttonCurse()  { say(pick(CONFIG.voice.buttonCurse), { rate: 1.25, pitch: 1.1, vol: 1.0 }); },
     toggleMute()   { muted = !muted; return muted; },
   };
 })();
@@ -1130,18 +1195,18 @@ function init() {
   $id('start-best').textContent = State.bestScore.toLocaleString();
 
   // Start / restart / menu
-  $id('play-btn').addEventListener('click',    () => { Audio.click(); startGame(); });
-  $id('restart-btn').addEventListener('click', () => { Audio.click(); startGame(); });
-  $id('menu-btn').addEventListener('click',    () => { Audio.click(); goToMenu(); });
+  $id('play-btn').addEventListener('click',    () => { Audio.click(); Voice.buttonCurse(); startGame(); });
+  $id('restart-btn').addEventListener('click', () => { Audio.click(); Voice.buttonCurse(); startGame(); });
+  $id('menu-btn').addEventListener('click',    () => { Audio.click(); Voice.buttonCurse(); goToMenu(); });
 
   // Pause
-  $id('pause-btn').addEventListener('click',  () => { Audio.click(); pauseGame(); });
-  $id('resume-btn').addEventListener('click', () => { Audio.click(); resumeGame(); });
-  $id('quit-btn').addEventListener('click',   () => { Audio.click(); goToMenu(); });
+  $id('pause-btn').addEventListener('click',  () => { Audio.click(); Voice.buttonCurse(); pauseGame(); });
+  $id('resume-btn').addEventListener('click', () => { Audio.click(); Voice.buttonCurse(); resumeGame(); });
+  $id('quit-btn').addEventListener('click',   () => { Audio.click(); Voice.buttonCurse(); goToMenu(); });
 
   // Serve + Clear
-  $id('serve-btn').addEventListener('click', () => { Audio.click(); serve(); });
-  $id('clear-btn').addEventListener('click', () => { Audio.click(); DrinkBuilder.reset(); });
+  $id('serve-btn').addEventListener('click', () => { Audio.click(); Voice.buttonCurse(); serve(); });
+  $id('clear-btn').addEventListener('click', () => { Audio.click(); Voice.buttonCurse(); DrinkBuilder.reset(); });
 
   // Mute toggle
   $id('mute-btn').addEventListener('click', () => {
@@ -1152,11 +1217,12 @@ function init() {
     btn.classList.toggle('muted', nowMuted);
   });
 
-  // Ingredient buttons — play brew sound on each tap
+  // Ingredient buttons — play brew sound + curse on each tap
   document.querySelectorAll('.ing-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       if (State.screen !== 'game' || State.paused) return;
       Audio.brew();
+      Voice.buttonCurse();
       DrinkBuilder.set(btn.dataset.type, btn.dataset.value);
     });
   });
